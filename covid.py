@@ -10,8 +10,7 @@ def get_country_data(country):
 def get_pt_data(ignore):
     url = "https://services.arcgis.com/CCZiGSEQbAxxFVh3/arcgis/rest/services/COVID19Portugal_UltimoRel/FeatureServer/0/query?f=json&where=1=1&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&outSR=102100&resultOffset=0&resultRecordCount=50&cacheHint=true"
     request = requests.get(url)
-    result = request.json()
-    data = result.get('features')[0].get('attributes')
+    data = request.json().get('features')[0].get('attributes')
     return { "confirmed" : {"value" : data.get('casosconfirmados') } , "deaths" : { "value" : data.get('nrobitos')}}
 
 country_data = {'PT' : get_pt_data}

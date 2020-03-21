@@ -31,7 +31,7 @@ def post_hook_stats(country):
     data = request.json
     group_id = data.get('group_id')
     # get covid data
-    covid = covid.Covid()
+    covid = Covid()
     confirmed = covid.get_country_confirmed(country)
     # post message
     messenger = Messenger()
