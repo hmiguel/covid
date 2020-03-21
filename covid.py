@@ -8,7 +8,7 @@ class Source(object):
         url = "https://covid19.mathdro.id/api/"
         request = requests.get(f"{url}/countries/{country}")
         return request.json()
-
+ 
     def get_pt_data(self, ignore):
         url = "https://services.arcgis.com/CCZiGSEQbAxxFVh3/arcgis/rest/services/COVID19Portugal_UltimoRel/FeatureServer/0/query?f=json&where=1=1&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&outSR=102100&resultOffset=0&resultRecordCount=50&cacheHint=true"
         request = requests.get(url)
