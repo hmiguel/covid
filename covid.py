@@ -10,7 +10,7 @@ class Covid(object):
 
     def get_country_confirmed(self, country):
         info = self.get_country_data(country)
-        infected = f"O número total de infectados em {data.countries.get(country)} é de {info.get('confirmed').get('value')} pessoas. 😷"
+        infected = f"O número total de infectados em {data.countries.get(country).capitalize()} é de {info.get('confirmed').get('value')} pessoas. 😷"
         return infected
 
     def get_country_deaths(self, country):
