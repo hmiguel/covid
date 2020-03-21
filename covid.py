@@ -18,7 +18,6 @@ class Source(object):
 class Covid(object):
     def __init__(self):
         self.source = Source()
-        self.general = "https://covid19.mathdro.id/api/"
         self.situations = {'confirmed' : self.get_country_confirmed, 'deaths':  self.get_country_deaths}
         
     def get_country_data(self, country):     
