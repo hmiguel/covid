@@ -12,27 +12,21 @@ def get_health():
     health = {'status' : 'ok'}
     return jsonify(health)
 
-@app.route('/stats/<country>/deaths', methods=['GET']) 
-def get_country_stats_deaths(country):
+@app.route('/stats/<country>/{situation}', methods=['GET']) 
+def get_country_stats_confirmed(country, situation):
     covid = Covid()
-    info = covid.get_country_deaths(country)
+    info = covid.get_country_situation(country, situation)
     return jsonify({'text' : info })
 
-@app.route('/stats/<country>/confirmed', methods=['GET']) 
-def get_country_stats_confirmed(country):
-    covid = Covid()
-    info = covid.get_country_confirmed(country)
-    return jsonify({'text' : info })
-
-@app.route('/hook/stats/<country>/confirmed', methods=['POST']) 
-def post_hook_stats(country):
+@app.route('/hook/stats/<country>/{situation}', methods=['POST']) 
+def post_hook_stats(country, situation):
     from messenger import Messenger
     # parse request data
     data = request.json
     group_id = data.get('group_id')
     # get covid data
     covid = Covid()
-    confirmed = covid.get_country_confirmed(country)
+    confirmed = covid.get_country_situation(country, situation)
     # post message
     messenger = Messenger()
     messenger.send(group_id, confirmed)
