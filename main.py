@@ -6,6 +6,13 @@ import os
 
 app = Flask(__name__)
 
+task = {
+        'http_request': {  # Specify the type of request.
+            'http_method': 'POST',
+            'url': url  # The full url path that the task will be sent to.
+        }
+}
+
 @app.route('/health', methods=['GET']) 
 def get_health():
     #major_ver, minor_ver = os.environ.get('CURRENT_VERSION_ID').rsplit('.',1)
@@ -27,17 +34,18 @@ def post_messenger(group_id):
     messenger.send(group_id, text)
     return '', 204
 
-@app.route('/hook/stats/<country>/<situation>', methods=['POST']) 
+@app.route('/hooks/stats/<country>/<situation>', methods=['POST']) 
 def post_hook_stats(country, situation):
     # parse request data
     data = request.json
+    im = data.get('im')
     group_id = data.get('group_id')
     # get covid data
     covid = Covid()
-    confirmed = covid.get_country_situation(country, situation)
+    text = covid.get_country_situation(country, situation)
     # post message
     messenger = Messenger()
-    messenger.send(group_id, confirmed)
+    messenger.send(group_id, text)
     return '', 204
 
 if __name__ == '__main__':
