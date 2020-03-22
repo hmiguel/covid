@@ -2,3 +2,5 @@ Flask
 requests
 google-cloud-datastore
 fbchat
+lxml
+pdf2image

@@ -28,13 +28,13 @@ def post_messenger(group_id):
 def post_hook_stats(country, situation):
     # parse request data
     data = request.json
-    im = data.get('im')
+    infographic = data.get('infographic', False)
     group_id = data.get('group_id')
     # get covid data
-    text = covid.get_country_situation(country, situation)
+    data = covid.get_country_situation(country, situation, infographic)
     # post message
-    messenger.send(group_id, text)
+    mid = messenger.send_image(group_id, data.image, data.description) if infographic else messenger.send(group_id, data)
     return '', 204
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8080, debug=False)
+    app.run(host='127.0.0.1', port=8080, debug=True)
