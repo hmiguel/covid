@@ -1,15 +1,17 @@
+import hashlib, base64, io, requests
 from PIL import Image
 
-def merge_images_h(images):  
-    widths, heights = zip(*(i.size for i in images))
-    total_width, max_height = sum(widths), max(heights)
-    merged = Image.new('RGB', (total_width, max_height))
-    x_offset = 0
-    for im in images:
-        merged.paste(im, (x_offset,0))
-        x_offset += im.size[0]
-    return merged
+def get_url_image(url):
+    img = Image.open(requests.get(url, stream = True).raw)
+    return img
+
+def get_base64(string):
+    return base64.urlsafe_b64encode(string.encode('utf-8')).decode('utf-8')
+
+def get_id(string):  
+    m = hashlib.md5()
+    m.update(string.encode('utf-8'))
+    return m.hexdigest()
 
 if __name__ == "__main__":
-    #merge_images_h(pages)
     pass

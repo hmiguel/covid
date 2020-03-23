@@ -4,6 +4,10 @@ class Database(object):
     def __init__(self):
         self.client = datastore.Client()
 
+    def get_utils(self, keyword):
+        key = self.client.key('Utils', keyword)
+        return self.client.get(key).get(keyword)
+
     def get_fb_configurations(self):
         key = self.client.key('Facebook', 'facebook')
         return self.client.get(key)

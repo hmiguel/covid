@@ -1,11 +1,12 @@
 import requests, data, lxml.html
-from pdf2image import convert_from_bytes
-import datetime, utils
+import datetime, utils, io
+from database import Database
 from models import Infographic
 
 class Source(object):
     def __init__(self):
         self.countries = {'PT' : self.get_pt_data}
+        self.db = Database()
 
     def get_country_data(self, country, infographic):
         url = f"https://corona.lmao.ninja/countries/{data.countries.get(country)}"
@@ -18,14 +19,12 @@ class Source(object):
                 }
 
     def get_pt_infographic(self, report_datetime):
-        report_datetime = report_datetime.strftime("%d/%m/%Y") if report_datetime else datetime.datetime.now().strftime("%d/%m/%Y")
+        report_datetime = report_datetime.strftime("%d/%m/%Y") if report_datetime else (datetime.datetime.now()-datetime.timedelta(hours=12)).strftime("%d/%m/%Y")
         html = requests.get('https://covid19.min-saude.pt/relatorio-de-situacao/')
         doc = lxml.html.fromstring(html.content)
         daily_report = doc.xpath(f"//a[contains(text(),'{report_datetime}')]").pop()
-        pdf = requests.get(daily_report.attrib['href'])
-        pages = convert_from_bytes(pdf.content, fmt="png")
-        merged = utils.merge_images_h(pages)
-        return Infographic(merged, daily_report.text, report_datetime)
+        infographic = utils.get_url_image(self.db.get_utils("pdf2image")+utils.get_base64(daily_report.attrib['href']))
+        return Infographic(infographic, daily_report.text, report_datetime)
 
     def get_pt_data(self, ignore, infographic, datetime):
         if infographic: return self.get_pt_infographic(datetime)
@@ -63,12 +62,15 @@ class Covid(object):
         return deaths
 
 if __name__ == "__main__":
-    covid = Covid()
+    
+    #covid = Covid()
     # print(covid.get_country_situation('PT', 'confirmed'))
     # print(covid.get_country_situation('IT', 'confirmed'))
    
     # print(covid.get_country_situation('PT', 'deaths'))
     # print(covid.get_country_situation('IT', 'deaths'))
 
-    info = covid.get_country_situation('PT', 'summary', True) # infographic
-    
+    #info = covid.get_country_situation('PT', 'summary', True) # infographic
+    pass
+
+

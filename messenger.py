@@ -44,4 +44,4 @@ if __name__ == "__main__":
     print('getting covid information....')
     i = c.get_country_situation('PT', 'summary', True)
     print('sending message....')
-    msg_id = messenger.send_image("2873403912742691", i.image, i.description)
+    msg_id = messenger.send_image("683207628420443", i.image, i.description)
