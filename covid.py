@@ -60,7 +60,7 @@ class Covid(object):
 
     def __get_country_summary__(self, country, infographic = None, report_datetime = None, is_cron = False):
         info = self.source.get_country_data(country, infographic, report_datetime, is_cron)
-        info.text = f"Portugal: {info.data.get('confirmed')} confirmados 😷, {info.data.get('deaths')} mortes 💀 and {info.data.get('recovered')} recuperados 😊."
+        info.text = f"Portugal: {info.data.get('confirmed')} confirmados 😷, {info.data.get('deaths')} mortes 💀 e {info.data.get('recovered')} recuperados 😊."
         return info
 
     def __get_country_confirmed__(self, country, report_datetime):
