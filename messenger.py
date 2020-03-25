@@ -20,28 +20,31 @@ class Messenger(object):
         group = self.db.get_fb_group(group_id)
         if group is None or not group.get('is_active'): raise Exception("group_id not allowed") 
 
+    def get_group(self, group_id):
+        self.__auth_group__(group_id)
+        return self.db.get_fb_group(group_id)
+
+    def get_report(self, report_id):
+        return self.db.get_fb_report(report_id)
+
+    def create_report(self, group_id, report_id):
+        return self.db.create_fb_report(group_id, report_id)
+
     def send(self, group_id, message):
         self.__auth_group__(group_id)
         return self.client.send(Message(text=message), thread_id=group_id, thread_type=ThreadType.GROUP)
 
-    def send_image(self, group_id, image, message = ""):
+    def send_image(self, group_id, infographic):
+        if infographic is None: return None
         self.__auth_group__(group_id)
         temp = tempfile.NamedTemporaryFile(delete=False)
         try:
             temp.name = f'{temp.name}.png'
-            image.save(temp.name)
-            mid = self.client.sendLocalImage(temp.name, message=Message(text=message), thread_id=group_id, thread_type=ThreadType.GROUP)
+            infographic.image.save(temp.name)
+            mid = self.client.sendLocalImage(temp.name, message=Message(text=infographic.description), thread_id=group_id, thread_type=ThreadType.GROUP)
             return mid
         finally:
             temp.close() 
 
 if __name__ == "__main__":
-    from covid import Covid
-    from models import Infographic
-    messenger = Messenger()
-    msg_id = messenger.send("2873403912742691", "test1")
-    c = Covid()
-    print('getting covid information....')
-    i = c.get_country_situation('PT', 'summary', True)
-    print('sending message....')
-    msg_id = messenger.send_image("683207628420443", i.image, i.description)
+    pass

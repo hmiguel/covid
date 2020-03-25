@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify,  abort
 from covid import Covid
+import pytz, os, utils
+from datetime import datetime
 from messenger import Messenger
-import os 
 
 app = Flask(__name__)
 messenger = Messenger()
@@ -14,7 +15,7 @@ def get_health():
 
 @app.route('/stats/<country>/<situation>', methods=['GET']) 
 def get_country_stats_confirmed(country, situation):
-    info = covid.get_country_situation(country, situation)
+    info = covid.get_country_situation(country.upper(), situation)
     return jsonify({'text' : info })
 
 @app.route('/hooks/<group_id>', methods=['POST']) 
@@ -29,12 +30,22 @@ def post_hook_stats(country, situation):
     # parse request data
     data = request.json
     infographic = data.get('infographic', False)
-    group_id = data.get('group_id')
+    group_ids = data.get('group_ids') or [data.get('group_id')]
+    is_cron = data.get('is_cron', False)
+    # check groups
+    groups = [messenger.get_group(group_id) for group_id in group_ids]
+    groups = { g.key.id_or_name : utils.get_report_id(g.key.id_or_name, country, situation, datetime.utcnow()) for g in groups if g }
+    groups = { key : groups[key] for key in groups if not is_cron or (is_cron and not messenger.get_report(groups[key]))}
+    # return if nothing to do
+    if not groups: return ('', 202)  
     # get covid data
-    data = covid.get_country_situation(country, situation, infographic)
-    # post message
-    mid = messenger.send_image(group_id, data.image, data.description) if infographic else messenger.send(group_id, data)
-    return '', 204
+    data = covid.get_country_situation(country.upper(), situation, infographic, is_cron = is_cron)
+    mids = []
+    for group_id in groups:
+        mid = messenger.send_image(group_id, data.infographic) if infographic else messenger.send(group_id, data.text)
+        if mid and is_cron: messenger.create_report(group_id, groups[group_id])
+        mids.append(mid)
+    return ('', 204) if [m for m in mids if m] else ('', 202) 
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)
