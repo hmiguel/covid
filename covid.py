@@ -1,76 +1,103 @@
 import requests, data, lxml.html
 import datetime, utils, io
 from database import Database
-from models import Infographic
+from models import Data, Infographic
 
 class Source(object):
     def __init__(self):
-        self.countries = {'PT' : self.get_pt_data}
+        self.countries = {'generic': self.__get_generic_country_data__, 'PT' : self.__get_pt_data__}
+        self.daily_report_times = {'PT' : '12h00', 'IT' : '18h00' } #TODO move to db
         self.db = Database()
 
-    def get_country_data(self, country, infographic):
+    def get_country_data(self, country, infographic = False, report_datetime = None, is_cron = False):
+        return self.countries.get(country, 'generic')(country, infographic, report_datetime, is_cron)
+
+    def __get_ninja_data__(self, country):
         url = f"https://corona.lmao.ninja/countries/{data.countries.get(country)}"
-        request = requests.get(url)
-        response = request.json()
-        return {
-                "confirmed" : response.get('cases') , 
-                "deaths" : response.get('deaths'), 
-                "recovered" : response.get('recovered')
-                }
+        response = requests.get(url).json()
+        return { "confirmed" : response.get('cases') , "deaths" : response.get('deaths'), 
+                "recovered" : response.get('recovered')}
 
-    def get_pt_infographic(self, report_datetime):
-        report_datetime = report_datetime.strftime("%d/%m/%Y") if report_datetime else (datetime.datetime.now()-datetime.timedelta(hours=12)).strftime("%d/%m/%Y")
-        html = requests.get('https://covid19.min-saude.pt/relatorio-de-situacao/')
-        doc = lxml.html.fromstring(html.content)
-        daily_report = doc.xpath(f"//a[contains(text(),'{report_datetime}')]").pop()
-        infographic = utils.get_url_image(self.db.get_utils("pdf2image")+utils.get_base64(daily_report.attrib['href']))
-        return Infographic(infographic, daily_report.text, report_datetime)
+    def __get_worldometers_data__(self, country_name):
+        url = f"https://www.worldometers.info/coronavirus/country/{country_name}/"
+        tree = lxml.html.fromstring(requests.get(url).content)
+        return { 'confirmed' if 'cases' in b.text.lower() else 'deaths' 
+                if 'deaths' in b.text.lower() else 'recovered' 
+                : b.getnext().xpath('span').pop().text.strip().replace(',','') for b in tree.xpath('//div[@id="maincounter-wrap"]/h1') }
 
-    def get_pt_data(self, ignore, infographic, datetime):
-        if infographic: return self.get_pt_infographic(datetime)
-        url = "https://services.arcgis.com/CCZiGSEQbAxxFVh3/arcgis/rest/services/COVID19Portugal_UltimoRel/FeatureServer/0/query?f=json&where=1=1&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&outSR=102100&resultOffset=0&resultRecordCount=50&cacheHint=true"
-        request = requests.get(url)
-        response = request.json().get('features')[0].get('attributes')
-        return {    
-                "confirmed" : response.get('casosconfirmados'), 
-                "deaths" : response.get('nrobitos'), 
-                "recovered" : response.get('recuperados')
-                }
+    def __get_generic_country_data__(self, country, infographic, report_datetime, is_cron):
+        return Data(self.__get_ninja_data__(country), infographic = infographic, datetime=report_datetime)
+
+    def __get_pt_data__(self, ignore, infographic, report_datetime, is_cron):
+        infographic = self.__get_pt_infographic__(is_cron) if infographic else None
+        return Data(self.__get_worldometers_data__('portugal'), infographic = infographic, datetime=report_datetime)
+
+    def __get_pt_infographic__(self, is_cron):
+        today, yesterday = datetime.datetime.utcnow(), datetime.datetime.utcnow()-datetime.timedelta(days=1)
+        contents = lxml.html.fromstring(requests.get('https://covid19.min-saude.pt/relatorio-de-situacao/').content)
+        today_report = contents.xpath(f'//a[contains(text(),\'{today.strftime("%d/%m/%Y")}\')]')
+        yesterday_report = contents.xpath(f'//a[contains(text(),\'{yesterday.strftime("%d/%m/%Y")}\')]')
+        report = yesterday_report.pop() if not today_report and not is_cron else today_report.pop() if today_report else None
+        if report is None: return None
+        infographic = utils.get_url_image(self.db.get_utils("pdf2image")+utils.get_base64(report.attrib['href']))
+        return Infographic(infographic, report.text, today if today_report else yesterday)
 
 class Covid(object):
     def __init__(self):
         self.source = Source()
-        self.situations = {'confirmed' : self.get_country_confirmed, 'deaths':  self.get_country_deaths, 'summary' : self.get_country_summary}
-        
-    def get_country_data(self, country, infographic = False, datetime = False):     
-        return self.source.countries.get(country, self.source.get_country_data)(country, infographic, datetime)
+        self.situations = {'confirmed' : self.__get_country_confirmed__, 'deaths':  
+        self.__get_country_deaths__, 'summary' : self.__get_country_summary__, 'recovered' : self.__get_country_recovered__}
+    
+    def get_country_situation(self, country, situation, infographic = False, report_datetime = None, is_cron = False):
+        report_datetime = report_datetime if report_datetime else datetime.datetime.utcnow()
+        data = self.situations.get(situation)(country, report_datetime) if not infographic else self.situations.get(situation)(country, infographic, report_datetime, is_cron)
+        return data
 
-    def get_country_situation(self, country, situation, infographic = None, datetime = None):
-        return self.situations.get(situation)(country) if not infographic else self.situations.get(situation)(country, infographic, datetime)
+    def __get_next_update__(self, country):
+        hours, minutes = self.source.daily_report_times.get(country, '00h00').split('h')
+        today_report_datetime = utils.get_datetime_midnight(datetime.datetime.utcnow()) + datetime.timedelta(hours=int(hours), minutes=int(minutes))
+        return today_report_datetime if today_report_datetime > datetime.datetime.utcnow() else today_report_datetime + datetime.timedelta(days=1)
 
-    def get_country_summary(self, country, infographic = None, datetime = None):
-        return self.get_country_data(country, infographic, datetime)
+    def __get_country_summary__(self, country, infographic, report_datetime, is_cron):
+        return self.source.get_country_data(country, infographic, report_datetime, is_cron)
 
-    def get_country_confirmed(self, country):
-        info = self.get_country_data(country)
-        cases = f"O número total de infectados em {data.countries.get(country).capitalize()} é de {info.get('confirmed')} pessoas. 😷"
-        return cases
+    def __get_country_confirmed__(self, country, report_datetime):
+        info = self.source.get_country_data(country, report_datetime = report_datetime)
+        info.text = f"O número total de infectados em {data.countries.get(country).capitalize()} é de {info.data.get('confirmed')} pessoas. 😷"
+        info.data = info.data.get('confirmed')
+        return info
 
-    def get_country_deaths(self, country):
-        info = self.get_country_data(country)
-        deaths = f"O número total de mortos em {data.countries.get(country).capitalize()} é de {info.get('deaths')} pessoas. 💀"
-        return deaths
+    def __get_country_deaths__(self, country, report_datetime):
+        info = self.source.get_country_data(country, report_datetime = report_datetime)
+        info.text = f"O número total de mortos em {data.countries.get(country).capitalize()} é de {info.data.get('deaths')} pessoas. 💀"
+        info.data = info.data.get('deaths')
+        return info
+
+    def __get_country_recovered__(self, country, report_datetime):
+        info = self.source.get_country_data(country, report_datetime = report_datetime)
+        info.text = f"O número total de recuperados em {data.countries.get(country).capitalize()} é de {info.data.get('recovered')} pessoas. 😊"
+        info.data = info.data.get('recovered')
+        return info
 
 if __name__ == "__main__":
+    covid = Covid()
+    br = covid.get_country_situation('BR', 'recovered')
+    pt = covid.get_country_situation('PT', 'confirmed')
+    it = covid.get_country_situation('IT', 'deaths')
     
-    #covid = Covid()
-    # print(covid.get_country_situation('PT', 'confirmed'))
-    # print(covid.get_country_situation('IT', 'confirmed'))
+    print(br.text, br.data, br.datetime)
+    print(it.text, it.data, it.datetime)
+    print(pt.text, pt.data, pt.datetime)
    
     # print(covid.get_country_situation('PT', 'deaths'))
     # print(covid.get_country_situation('IT', 'deaths'))
 
-    #info = covid.get_country_situation('PT', 'summary', True) # infographic
-    pass
+    pt_info = covid.get_country_situation('PT', 'summary', infographic = True) # infographic
+    print(type(pt_info.infographic))
 
-
+    group_id = "90548356094385"
+    country = "PT"
+    situation = "summary"
+    report_id = f'{group_id}{country}{pt_info.infographic.datetime.date().isoformat()}{situation}'
+    print(report_id)
+    print(utils.get_hash(report_id))

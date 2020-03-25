@@ -1,5 +1,5 @@
 from google.cloud import datastore
-
+import datetime
 class Database(object):
     def __init__(self):
         self.client = datastore.Client()
@@ -21,5 +21,15 @@ class Database(object):
 
     def get_fb_group(self, group_id):
         key = self.client.key('FacebookGroup', str(group_id))     
-        group = self.client.get(key)
-        return group
+        return self.client.get(key)
+
+    def get_fb_report(self, report_id):
+        key = self.client.key('FacebookReport', str(report_id))     
+        return self.client.get(key)
+
+    def create_fb_report(self, group_id, report_id):     
+        with self.client.transaction():
+            key = self.client.key('FacebookReport', report_id)  
+            report = datastore.Entity(key=key)
+            report.update({'group_id' : group_id, 'execution_date' : datetime.datetime.utcnow()})
+            self.client.put(report)
