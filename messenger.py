@@ -47,12 +47,4 @@ class Messenger(object):
             temp.close() 
 
 if __name__ == "__main__":
-    from covid import Covid
-    from models import Infographic
-    messenger = Messenger()
-    msg_id = messenger.send("2873403912742691", "test1")
-    c = Covid()
-    print('getting covid information....')
-    i = c.get_country_situation('PT', 'summary', True)
-    print('sending message....')
-    msg_id = messenger.send_image("683207628420443", i.image, i.description)
+    pass

@@ -89,15 +89,5 @@ if __name__ == "__main__":
     print(it.text, it.data, it.datetime)
     print(pt.text, pt.data, pt.datetime)
    
-    # print(covid.get_country_situation('PT', 'deaths'))
-    # print(covid.get_country_situation('IT', 'deaths'))
-
     pt_info = covid.get_country_situation('PT', 'summary', infographic = True) # infographic
     print(type(pt_info.infographic))
-
-    group_id = "90548356094385"
-    country = "PT"
-    situation = "summary"
-    report_id = f'{group_id}{country}{pt_info.infographic.datetime.date().isoformat()}{situation}'
-    print(report_id)
-    print(utils.get_hash(report_id))
