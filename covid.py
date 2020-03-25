@@ -10,7 +10,7 @@ class Source(object):
         self.db = Database()
 
     def get_country_data(self, country, infographic = False, report_datetime = None, is_cron = False):
-        return self.countries.get(country, 'generic')(country, infographic, report_datetime, is_cron)
+        return self.countries.get(country, self.countries.get('generic'))(country, infographic, report_datetime, is_cron)
 
     def __get_ninja_data__(self, country):
         url = f"https://corona.lmao.ninja/countries/{data.countries.get(country)}"
@@ -26,6 +26,7 @@ class Source(object):
                 : b.getnext().xpath('span').pop().text.strip().replace(',','') for b in tree.xpath('//div[@id="maincounter-wrap"]/h1') }
 
     def __get_generic_country_data__(self, country, infographic, report_datetime, is_cron):
+        print(country,report_datetime, infographic, is_cron )
         return Data(self.__get_ninja_data__(country), infographic = infographic, datetime=report_datetime)
 
     def __get_pt_data__(self, ignore, infographic, report_datetime, is_cron):
@@ -91,5 +92,5 @@ if __name__ == "__main__":
     print(it.text, it.data, it.datetime)
     print(pt.text, pt.data, pt.datetime)
    
-    pt_info = covid.get_country_situation('PT', 'summary', infographic = True) # infographic
-    print(type(pt_info.infographic))
+    #pt_info = covid.get_country_situation('PT', 'summary', infographic = True) # infographic
+    #print(type(pt_info.infographic))
