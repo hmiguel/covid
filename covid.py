@@ -58,25 +58,27 @@ class Covid(object):
         today_report_datetime = utils.get_datetime_midnight(datetime.datetime.utcnow()) + datetime.timedelta(hours=int(hours), minutes=int(minutes))
         return today_report_datetime if today_report_datetime > datetime.datetime.utcnow() else today_report_datetime + datetime.timedelta(days=1)
 
-    def __get_country_summary__(self, country, infographic, report_datetime, is_cron):
-        return self.source.get_country_data(country, infographic, report_datetime, is_cron)
+    def __get_country_summary__(self, country, infographic = None, report_datetime = None, is_cron = False):
+        info = self.source.get_country_data(country, infographic, report_datetime, is_cron)
+        info.text = f"Portugal: {info.data.get('confirmed')} confirmados 😷, {info.data.get('deaths')} mortes 💀 and {info.data.get('recovered')} recuperados 😊."
+        return info
 
     def __get_country_confirmed__(self, country, report_datetime):
         info = self.source.get_country_data(country, report_datetime = report_datetime)
         info.text = f"O número total de infectados em {data.countries.get(country).capitalize()} é de {info.data.get('confirmed')} pessoas. 😷"
-        info.data = info.data.get('confirmed')
+        info.data = { key : info.data.get(key) for key in info.data if key == "confirmed" }
         return info
 
     def __get_country_deaths__(self, country, report_datetime):
         info = self.source.get_country_data(country, report_datetime = report_datetime)
         info.text = f"O número total de mortos em {data.countries.get(country).capitalize()} é de {info.data.get('deaths')} pessoas. 💀"
-        info.data = info.data.get('deaths')
+        info.data = { key : info.data.get(key) for key in info.data if key == "deaths" }
         return info
 
     def __get_country_recovered__(self, country, report_datetime):
         info = self.source.get_country_data(country, report_datetime = report_datetime)
         info.text = f"O número total de recuperados em {data.countries.get(country).capitalize()} é de {info.data.get('recovered')} pessoas. 😊"
-        info.data = info.data.get('recovered')
+        info.data = { key : info.data.get(key) for key in info.data if key == "recovered" }
         return info
 
 if __name__ == "__main__":

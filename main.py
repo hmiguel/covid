@@ -14,9 +14,9 @@ def get_health():
     return jsonify(health)
 
 @app.route('/stats/<country>/<situation>', methods=['GET']) 
-def get_country_stats_confirmed(country, situation):
+def get_country_stats(country, situation):
     info = covid.get_country_situation(country.upper(), situation)
-    return jsonify({'text' : info })
+    return jsonify({'text' : info.text, 'data' : info.data })
 
 @app.route('/hooks/<group_id>', methods=['POST']) 
 def post_messenger(group_id):
