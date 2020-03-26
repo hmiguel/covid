@@ -15,8 +15,8 @@ class Source(object):
     def __get_ninja_data__(self, country):
         url = f"https://corona.lmao.ninja/countries/{data.countries.get(country)}"
         response = requests.get(url).json()
-        return { "confirmed" : response.get('cases') , "deaths" : response.get('deaths'), 
-                "recovered" : response.get('recovered')}
+        return { "confirmed" : response.get('cases', 0) , "deaths" : response.get('deaths', 0), 
+                "recovered" : response.get('recovered', 0)}
 
     def __get_worldometers_data__(self, country_name):
         url = f"https://www.worldometers.info/coronavirus/country/{country_name}/"
