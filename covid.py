@@ -39,14 +39,14 @@ class Source(object):
         return Data(self.__get_worldometers_data__('PT'), infographic = infographic, datetime=report_datetime)
 
     def __get_pt_infographic__(self):
-        today, yesterday = datetime.datetime.utcnow(), datetime.datetime.utcnow()-datetime.timedelta(days=1)
+        today = datetime.datetime.utcnow()
         contents = lxml.html.fromstring(requests.get('https://covid19.min-saude.pt/relatorio-de-situacao/').content)
-        today_report = contents.xpath(f'//a[contains(text(),\'{today.strftime("%d/%m/")}\')]')
-        yesterday_report = contents.xpath(f'//a[contains(text(),\'{yesterday.strftime("%d/%m/")}\')]')
-        report = yesterday_report.pop() if not today_report and not self.is_cron else today_report.pop() if today_report else None
+        report = (contents.xpath(f'//a[contains(text(),\'{today.strftime("%d/%m/")}\')]') or [None]).pop()
         if report is None: return None
+        description = ''.join([t.text for t in report.getparent().getchildren() if report is not None]) 
+        if description is None: return None
         infographic = utils.get_url_image(self.db.get_utils("pdf2image")+utils.get_base64(report.attrib['href']))
-        return Infographic(infographic, report.text, today if today_report else yesterday)
+        return Infographic(infographic, description, today)
 
 class Covid(object):
     def __init__(self, is_cron = False):
