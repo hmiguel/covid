@@ -4,15 +4,19 @@ from database import Database
 from models import Data, Infographic
 
 class Source(object):
-    def __init__(self, is_cron):
+    def __init__(self, content = None):
         self.countries = {'ZZ': self.__get_generic_country_data__, 'PT' : self.__get_pt_data__}
         self.daily_report_times = {'PT' : '12h00', 'IT' : '18h00' } #TODO move to db
         self.db = Database()
-        self.is_cron = bool(is_cron)
+        self.content = content
 
     def get_country_data(self, country, infographic = None, report_datetime = None):
-
         return self.countries.get(country, self.countries.get('ZZ'))(country, infographic, report_datetime)
+
+    def get_pdf_infographic(self, url):
+        url = requests.head(url, allow_redirects=True).url
+        infographic = utils.get_url_image(self.db.get_utils("pdf2image")+utils.get_base64(url))
+        return Infographic(infographic, f'Report {infographic.datetime.strftime("%d/%m/%Y, %H:%M:%S")}', infographic.datetime)
 
     def __get_ninja_data__(self, country):
         url = f"https://corona.lmao.ninja/countries/{data.countries.get(country)}"
@@ -45,12 +49,12 @@ class Source(object):
         if report is None: return None
         description = ''.join([t.text for t in report.getparent().getchildren() if report is not None]) 
         if description is None: return None
-        infographic = utils.get_url_image(self.db.get_utils("pdf2image")+utils.get_base64(report.attrib['href']))
+        infographic = self.get_pdf_infographic(report.attrib['href'])
         return Infographic(infographic, description, today)
 
 class Covid(object):
-    def __init__(self, is_cron = False):
-        self.source = Source(is_cron)
+    def __init__(self):
+        self.source = Source()
         self.situations = {'confirmed' : self.__get_country_confirmed__, 'deaths':  
         self.__get_country_deaths__, 'summary' : self.__get_country_summary__, 'recovered' : self.__get_country_recovered__}
     
