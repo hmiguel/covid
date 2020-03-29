@@ -4,25 +4,17 @@ from database import Database
 from models import Data, Infographic
 
 class Source(object):
-    def __init__(self, content = None):
+    def __init__(self):
         self.countries = {'ZZ': self.__get_generic_country_data__, 'PT' : self.__get_pt_data__}
-        self.daily_report_times = {'PT' : '12h00', 'IT' : '18h00' } #TODO move to db
         self.db = Database()
-        self.content = content
 
     def get_country_data(self, country, infographic = None, report_datetime = None):
         return self.countries.get(country, self.countries.get('ZZ'))(country, infographic, report_datetime)
 
-    def get_pdf_infographic(self, url):
+    def get_pdf_infographic(self, url, description = None):
         url = requests.head(url, allow_redirects=True).url
         infographic = utils.get_url_image(self.db.get_utils("pdf2image")+utils.get_base64(url))
-        return Infographic(infographic, f'Report {infographic.datetime.strftime("%d/%m/%Y, %H:%M:%S")}', infographic.datetime)
-
-    def __get_ninja_data__(self, country):
-        url = f"https://corona.lmao.ninja/countries/{data.countries.get(country)}"
-        response = requests.get(url).json()
-        return {"confirmed" : response.get('cases', 0) , "deaths" : response.get('deaths', 0), 
-                "recovered" : response.get('recovered', 0)}
+        return Infographic(infographic, f'Report {infographic.datetime.strftime("%d/%m/%Y, %H:%M:%S")}' if not description else description, infographic.datetime)
 
     def __get_value__(self, text):
         n = text.strip().replace(',', '')
@@ -45,12 +37,10 @@ class Source(object):
     def __get_pt_infographic__(self):
         today = datetime.datetime.utcnow()
         contents = lxml.html.fromstring(requests.get('https://covid19.min-saude.pt/relatorio-de-situacao/').content)
-        report = (contents.xpath(f'//a[contains(text(),\'{today.strftime("%d/%m/")}\')]') or [None]).pop()
-        if report is None: return None
-        description = ''.join([t.text for t in report.getparent().getchildren() if report is not None]) 
-        if description is None: return None
-        infographic = self.get_pdf_infographic(report.attrib['href'])
-        return Infographic(infographic, description, today)
+        report = (contents.xpath(f"//ul/li") or [None]).pop(0)
+        url, description = report.getchildren().pop(0).attrib['href'], ''.join(report.itertext())
+        if today.strftime("%d/%m/%Y") not in description or not url.endswith('pdf'): return None
+        return self.get_pdf_infographic(url, description)
 
 class Covid(object):
     def __init__(self):
@@ -62,11 +52,6 @@ class Covid(object):
         report_datetime = report_datetime if report_datetime else datetime.datetime.utcnow()
         data = self.situations.get(situation)(country, report_datetime = report_datetime) if not infographic else self.situations.get(situation)(country, infographic, report_datetime)
         return data
-
-    def __get_next_update__(self, country):
-        hours, minutes = self.source.daily_report_times.get(country, '00h00').split('h')
-        today_report_datetime = utils.get_datetime_midnight(datetime.datetime.utcnow()) + datetime.timedelta(hours=int(hours), minutes=int(minutes))
-        return today_report_datetime if today_report_datetime > datetime.datetime.utcnow() else today_report_datetime + datetime.timedelta(days=1)
 
     def __get_country_summary__(self, country, infographic = None, report_datetime = None):
         info = self.source.get_country_data(country, infographic = infographic, report_datetime = report_datetime)
