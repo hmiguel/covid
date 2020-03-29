@@ -23,7 +23,7 @@ class Source(object):
     def __get_worldometers_data__(self, country):
         url = "https://www.worldometers.info/coronavirus/#countries"
         tree = lxml.html.fromstring(requests.get(url).content)
-        headers = ["country", "confirmed", "new_confirmed", "deaths", "new_deaths", "recovered", "active", "critical", "confirmed_per_1M", "deaths_per_1M"]
+        headers = ["country", "confirmed", "new_confirmed", "deaths", "new_deaths", "recovered", "active", "critical", "confirmed_per_1M", "deaths_per_1M", "first_case"]
         today = tree.xpath(f"//table[@id='main_table_countries_today']/tbody[1]/tr[contains(td[1], '{data.wc_countries.get(country)}')]").pop()
         return dict(zip(headers, [ self.__get_value__(x.text_content()) for x in today.getchildren()]))
 
@@ -83,7 +83,7 @@ class Covid(object):
 if __name__ == "__main__":
     covid = Covid()
     #br = covid.get_country_situation('BR', 'recovered')
-    pt = covid.get_country_situation('PT', 'summary')
+    pt = covid.get_country_situation('FR', 'summary')
     #it = covid.get_country_situation('IT', 'deaths')
     
     # print(br.text, br.data, br.datetime)
