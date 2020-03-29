@@ -260,7 +260,7 @@ wc_countries = {
 	'CN': 'China',
 	'IT': 'Italy',
 	'ES': 'Spain',
-	'FR': 'FRANCE',
+	'FR': 'France',
 	'DE': 'Germany',
 	'IR': 'Iran',
 	'YT': 'Mayotte',

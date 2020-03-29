@@ -81,6 +81,8 @@ class Covid(object):
         return info
 
 if __name__ == "__main__":
+    import data
+    print(data.wc_countries.get('FR'))
     covid = Covid()
     #br = covid.get_country_situation('BR', 'recovered')
     pt = covid.get_country_situation('FR', 'summary')
