@@ -31,7 +31,7 @@ class Source(object):
         return Data(self.__get_worldometers_data__(country), infographic = infographic, datetime=report_datetime)
 
     def __get_pt_data__(self, ignore, infographic, report_datetime):
-        infographic = infographic if infographic is not None else None
+        infographic = self.__get_pt_infographic__() if infographic is not None else None
         return Data(self.__get_worldometers_data__('PT'), infographic = infographic, datetime=report_datetime)
 
     def __get_pt_infographic__(self):
