@@ -57,7 +57,7 @@ class Covid(object):
         info = self.source.get_country_data(country, infographic = infographic, report_datetime = report_datetime)
         diff_deaths = f" ({info.data.get('new_deaths')})" if info.data.get('new_deaths') else ''
         diff_cases = f" ({info.data.get('new_confirmed')})" if info.data.get('new_confirmed') else ''
-        info.text = f"{data.countries.get(country).title()}: {info.data.get('confirmed')}{diff_cases} confirmados 😷, {info.data.get('deaths')}{diff_deaths} mortes 💀 e {info.data.get('recovered')} recuperados 😊."
+        info.text = f"{data.countries.get(country).title()}: {info.data.get('confirmed')}{diff_cases} confirmados 😷, {info.data.get('deaths')}{diff_deaths} mortes 💀 , {info.data.get('critical')} em estado crítico 😵 e {info.data.get('recovered')} recuperados 😊."
         return info
 
     def __get_country_confirmed__(self, country, report_datetime):
@@ -83,7 +83,7 @@ class Covid(object):
 if __name__ == "__main__":
     covid = Covid()
     #br = covid.get_country_situation('BR', 'recovered')
-    pt = covid.get_country_situation('US', 'summary')
+    pt = covid.get_country_situation('PT', 'summary')
     #it = covid.get_country_situation('IT', 'deaths')
     
     # print(br.text, br.data, br.datetime)
