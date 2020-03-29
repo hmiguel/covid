@@ -16,9 +16,15 @@ class Messenger(object):
         self.db.set_fb_configurations(configurations)
         return client
 
+    def get_config(self):
+        return self.db.get_fb_configurations()
+
     def __auth_group__(self, group_id):
         group = self.db.get_fb_group(group_id)
         if group is None or not group.get('is_active'): raise Exception("group_id not allowed") 
+
+    def get_all_groups(self):
+        return self.db.get_fb_groups()
 
     def get_group(self, group_id):
         self.__auth_group__(group_id)

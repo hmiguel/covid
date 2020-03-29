@@ -19,6 +19,10 @@ class Database(object):
             entity.update(configurations)
             self.client.put(entity)
 
+    def get_fb_groups(self):
+        query = self.client.query(kind='FacebookGroup')
+        return list(query.fetch())
+
     def get_fb_group(self, group_id):
         key = self.client.key('FacebookGroup', str(group_id))     
         return self.client.get(key)

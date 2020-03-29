@@ -5,7 +5,9 @@ from datetime import date
 from datetime import datetime
 
 def get_url_image(url):
-    img = Image.open(requests.get(url, stream = True).raw)
+    r = requests.get(url, stream = True)
+    img = Image.open(r.raw)
+    img.datetime = datetime.strptime(r.headers.get('Document-Date'), "%Y%m%dT%H%M%S") or None
     return img
 
 def get_base64(string):
