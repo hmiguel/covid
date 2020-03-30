@@ -253,7 +253,10 @@ countries = {
 	'YE': 'YEMEN',
 	'ZM': 'ZAMBIA',
 	'ZW': 'ZIMBABWE',
+	'EU': 'Europe',
 }
+
+wc_europe = ['AL', 'AD', 'AT', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FO', 'FI', 'FR', 'DE', 'GI', 'GR', 'HU', 'IS', 'IE', 'IM', 'IT', 'XK', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'UA', 'GB', 'VA']
 
 wc_countries = {
 	'US': 'USA',
@@ -266,6 +269,7 @@ wc_countries = {
 	'YT': 'Mayotte',
 	'CH': 'Switzerland',
 	'UA': 'Ukraine',
+	'EU': 'Europe',
 	'KR': 'S. Korea',
 	'NL': 'Sint Maarten',
 	'AT': 'Austria',
