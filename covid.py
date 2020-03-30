@@ -36,7 +36,7 @@ class Source(object):
         headers = ["country", "confirmed", "new_confirmed", "deaths", "new_deaths", "recovered", "active", "critical", "confirmed_per_1M", "deaths_per_1M", "first_case"]
         out = [0,0,0,0,0,0,0,0]
         for code in data.wc_europe:
-            if (code not in data.wc_countries): continue
+            if (code not in data.wc_countries): print(code); continue
             today = tree.xpath(f"//table[@id='main_table_countries_today']/tbody[1]/tr[contains(td[1], '{data.wc_countries.get(code)}')]").pop()   
             row = [self.__get_value(x.text_content()) for x in today.getchildren()][1:-2]      
             row = [int(x.lstrip('+')) if '+' in str(x) else int(x) for x in row]

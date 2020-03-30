@@ -265,6 +265,7 @@ wc_countries = {
 	'ES': 'Spain',
 	'FR': 'France',
 	'DE': 'Germany',
+	'GB': 'UK',
 	'IR': 'Iran',
 	'YT': 'Mayotte',
 	'CH': 'Switzerland',
