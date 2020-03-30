@@ -5,7 +5,7 @@ from models import Data, Infographic
 
 class Source(object):
     def __init__(self):
-        self.countries = {'ZZ': self.__get_generic_country_data__, 'PT' : self.__get_pt_data__}
+        self.countries = {'ZZ': self.__get_generic_country_data__, 'PT' : self.__get_pt_data__, 'EU' : self.__get_eu_data}
         self.db = Database()
 
     def get_country_data(self, country, infographic = None, report_datetime = None):
@@ -16,7 +16,7 @@ class Source(object):
         infographic = utils.get_url_image(self.db.get_utils("pdf2image")+utils.get_base64(url))
         return Infographic(infographic, f'Report {infographic.datetime.strftime("%d/%m/%Y, %H:%M:%S")}' if not description else description, infographic.datetime)
 
-    def __get_value__(self, text):
+    def __get_value(self, text):
         n = text.strip().replace(',', '')
         return n if n else 0
 
@@ -25,10 +25,25 @@ class Source(object):
         tree = lxml.html.fromstring(requests.get(url).content)
         headers = ["country", "confirmed", "new_confirmed", "deaths", "new_deaths", "recovered", "active", "critical", "confirmed_per_1M", "deaths_per_1M", "first_case"]
         today = tree.xpath(f"//table[@id='main_table_countries_today']/tbody[1]/tr[contains(td[1], '{data.wc_countries.get(country)}')]").pop()
-        return dict(zip(headers, [ self.__get_value__(x.text_content()) for x in today.getchildren()]))
+        return dict(zip(headers, [ self.__get_value(x.text_content()) for x in today.getchildren()]))
 
     def __get_generic_country_data__(self, country, infographic, report_datetime):
         return Data(self.__get_worldometers_data__(country), infographic = infographic, datetime=report_datetime)
+
+    def __get_eu_data(self, ignore, infographic, report_datetime):
+        url = "https://www.worldometers.info/coronavirus/#countries"
+        tree = lxml.html.fromstring(requests.get(url).content)
+        headers = ["country", "confirmed", "new_confirmed", "deaths", "new_deaths", "recovered", "active", "critical", "confirmed_per_1M", "deaths_per_1M", "first_case"]
+        out = [0,0,0,0,0,0,0,0]
+        for code in data.wc_europe:
+            if (code not in data.wc_countries): continue
+            today = tree.xpath(f"//table[@id='main_table_countries_today']/tbody[1]/tr[contains(td[1], '{data.wc_countries.get(code)}')]").pop()   
+            row = [self.__get_value(x.text_content()) for x in today.getchildren()][1:-2]      
+            row = [int(x.lstrip('+')) if '+' in str(x) else int(x) for x in row]
+            out = [x + y for x, y in zip(out, row)]
+        out = dict(zip(headers[1:-2], out))
+        out['new_deaths'], out['new_confirmed'] = f"+{out['new_deaths']}" if out['new_deaths'] else 0, f"+{out['new_confirmed']}" if out['new_confirmed'] else 0
+        return Data(out, infographic = infographic, datetime=report_datetime)
 
     def __get_pt_data__(self, ignore, infographic, report_datetime):
         infographic = self.__get_pt_infographic__() if infographic is not None else None
@@ -82,10 +97,10 @@ class Covid(object):
 
 if __name__ == "__main__":
     import data
-    print(data.wc_countries.get('FR'))
+    #print(data.wc_countries.get('EU'))
     covid = Covid()
     #br = covid.get_country_situation('BR', 'recovered')
-    pt = covid.get_country_situation('FR', 'summary')
+    pt = covid.get_country_situation('EU', 'summary')
     #it = covid.get_country_situation('IT', 'deaths')
     
     # print(br.text, br.data, br.datetime)
