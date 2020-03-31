@@ -3,6 +3,7 @@ from covid import Covid, Source
 import pytz, os, utils, requests
 from datetime import datetime
 from messenger import Messenger
+import bot
 
 app = Flask(__name__)
 messenger = Messenger()
@@ -27,24 +28,10 @@ def post_messenger(group_id):
 
 @app.route('/bot', methods=['POST']) 
 def post_bot():
-    key = request.args.get('key') # TODO verify bot key
-    if messenger.get_config().get('key') != key: return ('', 401) 
-    content = request.values
-    if int(content.get('NumMedia', 0)) != 1: return ('', 202) 
-    url, media = content.get('MediaUrl0'), content.get('MediaContentType0')
-    if media != "application/pdf": return ('', 202) 
-    source = Source()
-    infographic = source.get_pdf_infographic(url = url)
-    # get groups
-    groups = messenger.get_all_groups()
-    groups = { g.key.id_or_name : utils.get_report_id(g.key.id_or_name, 'PT', 'summary', infographic.datetime) for g in groups if g }
-    groups = { key : groups[key] for key in groups if not messenger.get_report(groups[key]) }
-    mids = []
-    for group_id in groups:
-        mid = messenger.send_image(group_id, infographic) if infographic else messenger.send(group_id, data.text)
-        if mid: messenger.create_report(group_id, groups[group_id])
-        mids.append(mid)
-    return ('', 204) if [m for m in mids if m] else ('', 202)
+    app = request.args.get('app')
+    key = request.args.get('key')
+    im = bot.Bot(app, key)
+    return im.bot.process(request, messenger) if im.bot is not None else ('', 400)
 
 @app.route('/hooks/stats/<country>/<situation>', methods=['POST']) 
 def post_hook_stats(country, situation):

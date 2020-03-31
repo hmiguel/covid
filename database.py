@@ -8,6 +8,10 @@ class Database(object):
         key = self.client.key('Utils', keyword)
         return self.client.get(key).get(keyword)
 
+    def get_bot(self, app):
+        key = self.client.key('Bot', app)
+        return self.client.get(key) if key is not None else None
+
     def get_fb_configurations(self):
         key = self.client.key('Facebook', 'facebook')
         return self.client.get(key)
