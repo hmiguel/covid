@@ -10,6 +10,9 @@ def get_url_image(url):
     img.datetime = datetime.strptime(r.headers.get('Document-Date'), "%Y%m%dT%H%M%S") or None
     return img
 
+def get_increase_percent(cur, inc): 
+    return round((inc)/((cur-inc)*1.0)*100.0,2)
+
 def get_base64(string):
     return base64.urlsafe_b64encode(string.encode('utf-8')).decode('utf-8')
 
