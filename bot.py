@@ -6,7 +6,7 @@ class Bot(object):
     def __init__(self, app, key):
         self.db = Database()
         self.bot = self._get_bot_instance(app, key)
-        
+
     def _get_bot_instance(self, app, key):
         db = self.db.get_bot(app.lower())
         if db is None or db.get('key') != key: return None
@@ -35,6 +35,10 @@ class Whatsapp(object):
 class Messenger(object):
     def process(self, request):
         return ('', 200)  
+
+class Twitter(object):
+    def process(self, request):
+        return ('', 200)
 
 if __name__ == "__main__":
     pass

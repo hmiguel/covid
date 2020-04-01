@@ -6,7 +6,7 @@ from models import Data, Infographic
 class Source(object):
     def __init__(self):
         self.groups = { 'EU' : data.europe, 'WD' : data.countries }
-        self.countries = {'ZZ': self.__get_generic_country_data__, 'PT' : self.__get_pt_data__, 'EU' : self.__get_sum_data, 'WD': self.__get_sum_data}
+        self.countries = {'ZZ': self.__get_generic_country_data, 'PT' : self.__get_pt_data, 'EU' : self.__get_sum_data, 'WD': self.__get_sum_data}
         self.db = Database()
 
     def get_country_data(self, country, infographic = None, report_datetime = None):
@@ -28,7 +28,7 @@ class Source(object):
         today = tree.xpath(f"//table[@id='main_table_countries_today']/tbody[1]/tr[contains(td[1], '{data.wc_countries.get(country)}')]").pop()
         return dict(zip(headers, [ self.__get_value(x.text_content()) for x in today.getchildren()]))
 
-    def __get_generic_country_data__(self, country, infographic, report_datetime):
+    def __get_generic_country_data(self, country, infographic, report_datetime):
         return Data(self.__get_worldometers_data__(country), infographic = infographic, datetime=report_datetime)
 
     def __get_sum_data(self, group, infographic, report_datetime):
@@ -47,11 +47,11 @@ class Source(object):
         out['new_deaths'], out['new_confirmed'] = f"+{out['new_deaths']}" if out['new_deaths'] else 0, f"+{out['new_confirmed']}" if out['new_confirmed'] else 0
         return Data(out, infographic = infographic, datetime=report_datetime)
 
-    def __get_pt_data__(self, ignore, infographic, report_datetime):
-        infographic = self.__get_pt_infographic__() if infographic is not None else None
+    def __get_pt_data(self, ignore, infographic, report_datetime):
+        infographic = self.__get_pt_infographic() if infographic is not None else None
         return Data(self.__get_worldometers_data__('PT'), infographic = infographic, datetime=report_datetime)
 
-    def __get_pt_infographic__(self):
+    def __get_pt_infographic(self):
         today = datetime.datetime.utcnow()
         contents = lxml.html.fromstring(requests.get('https://covid19.min-saude.pt/relatorio-de-situacao/').content)
         report = (contents.xpath(f"//ul/li") or [None]).pop(0)
@@ -72,8 +72,8 @@ class Covid(object):
 
     def __get_country_summary__(self, country, infographic = None, report_datetime = None):
         info = self.source.get_country_data(country, infographic = infographic, report_datetime = report_datetime)
-        diff_deaths = f" ({info.data.get('new_deaths')})" if info.data.get('new_deaths') else ''
-        diff_cases = f" ({info.data.get('new_confirmed')})" if info.data.get('new_confirmed') else ''
+        diff_deaths = f" ({info.data.get('new_deaths')}/{ utils.get_increase_percent(int(info.data.get('deaths')), int(info.data.get('new_deaths').replace('+','')))}%)" if info.data.get('new_deaths') else ''
+        diff_cases = f" ({info.data.get('new_confirmed')}/{ utils.get_increase_percent(int(info.data.get('confirmed')), int(info.data.get('new_confirmed').replace('+','')))}%)" if info.data.get('new_confirmed') else ''
         info.text = f"{data.countries.get(country).title()}: {info.data.get('confirmed')}{diff_cases} confirmados 😷, {info.data.get('deaths')}{diff_deaths} mortes 💀, {info.data.get('critical')} em estado crítico 😵 e {info.data.get('recovered')} recuperados 😊."
         return info
 
@@ -83,6 +83,7 @@ class Covid(object):
         info.text = f"O número total de infectados em {data.countries.get(country).capitalize()} é de {info.data.get('confirmed')}{diff_yt} pessoas. 😷"
         info.data = { key : info.data.get(key) for key in info.data if key == "confirmed" }
         return info
+
 
     def __get_country_deaths__(self, country, report_datetime):
         info = self.source.get_country_data(country, report_datetime = report_datetime)
