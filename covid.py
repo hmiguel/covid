@@ -24,9 +24,9 @@ class Source(object):
     def __get_worldometers_data__(self, country):
         url = "https://www.worldometers.info/coronavirus/#countries"
         tree = lxml.html.fromstring(requests.get(url).content)
-        headers = ["country", "confirmed", "new_confirmed", "deaths", "new_deaths", "recovered", "active", "critical", "confirmed_per_1M", "deaths_per_1M", "first_case"]
-        today = tree.xpath(f"//table[@id='main_table_countries_today']/tbody[1]/tr[contains(td[1], '{data.wc_countries.get(country)}')]").pop()
-        return dict(zip(headers, [ self.__get_value(x.text_content()) for x in today.getchildren()]))
+        country = data.wc_countries.get(country)   
+        result = [x for x in tree.xpath(f"//table[@id='main_table_countries_today']/tbody[1]/tr[td[1] = '{country}']")].pop(0)
+        return dict(zip(data.wc_headers, [ self.__get_value(x.text_content()) for x in result.getchildren()]))
 
     def __get_generic_country_data(self, country, infographic, report_datetime):
         return Data(self.__get_worldometers_data__(country), infographic = infographic, datetime=report_datetime)
@@ -34,7 +34,6 @@ class Source(object):
     def __get_sum_data(self, group, infographic, report_datetime):
         url = "https://www.worldometers.info/coronavirus/#countries"
         tree = lxml.html.fromstring(requests.get(url).content)
-        headers = ["country", "confirmed", "new_confirmed", "deaths", "new_deaths", "recovered", "active", "critical", "confirmed_per_1M", "deaths_per_1M", "first_case"]
         out = [0,0,0,0,0,0,0]
         for code in self.groups.get(group):
             if (code not in data.wc_countries): continue
@@ -43,7 +42,7 @@ class Source(object):
             row = [self.__get_value(x.text_content()) for x in row.pop().getchildren()][1:-3]   
             row = [int(x.lstrip('+')) if '+' in str(x) else int(x) for x in row]
             out = [x + y for x, y in zip(out, row)]
-        out = dict(zip(headers[1:-2], out))
+        out = dict(zip(data.wc_headers[1:-2], out))
         print(out)
         out['country'] = data.wc_countries.get(group)
         out['new_deaths'], out['new_confirmed'] = f"+{out['new_deaths']}" if out['new_deaths'] else '0', f"+{out['new_confirmed']}" if out['new_confirmed'] else '0'
