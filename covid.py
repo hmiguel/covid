@@ -40,10 +40,11 @@ class Source(object):
             if (code not in data.wc_countries): continue
             row = tree.xpath(f"//table[@id='main_table_countries_today']/tbody[1]/tr[contains(td[1], '{data.wc_countries.get(code)}')]") or None
             if row is None: continue
-            row = [self.__get_value(x.text_content()) for x in row.pop().getchildren()][1:-2]      
+            row = [self.__get_value(x.text_content()) for x in row.pop().getchildren()][1:-3]   
             row = [int(x.lstrip('+')) if '+' in str(x) else int(x) for x in row]
             out = [x + y for x, y in zip(out, row)]
         out = dict(zip(headers[1:-2], out))
+        print(out)
         out['country'] = data.wc_countries.get(group)
         out['new_deaths'], out['new_confirmed'] = f"+{out['new_deaths']}" if out['new_deaths'] else '0', f"+{out['new_confirmed']}" if out['new_confirmed'] else '0'
         return Data(out, infographic = infographic, datetime=report_datetime)
