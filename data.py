@@ -456,4 +456,4 @@ wc_countries = {
 	'TL': 'Timor-Leste'
 }
 
-wc_headers = ["country", "confirmed", "new_confirmed", "deaths", "new_deaths", "recovered", "active", "critical", "confirmed_per_1M", "deaths_per_1M", "first_case"]
+wc_headers = ["country", "confirmed", "new_confirmed", "deaths", "new_deaths", "recovered", "active", "critical", "confirmed_per_1M", "deaths_per_1M", "tested"]
