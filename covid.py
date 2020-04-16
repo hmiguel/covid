@@ -19,7 +19,7 @@ class Source(object):
 
     def __get_value(self, text):
         n = text.strip().replace(',', '').replace("N/A","0").lstrip('+')
-        return int(n) if n else 0
+        return n if n else 0
 
     def __get_worldometers_data__(self, country):
         url = "https://www.worldometers.info/coronavirus/#countries"
@@ -40,8 +40,7 @@ class Source(object):
             row = tree.xpath(f"//table[@id='main_table_countries_today']/tbody[1]/tr[contains(td[1], '{data.wc_countries.get(code)}')]") or None
             if row is None: continue
             row = [self.__get_value(x.text_content()) for x in row.pop().getchildren()][1:8]   
-            # row = [int(x) if '+' in str(x) else int(x) for x in row]
-            out = [x + y for x, y in zip(out, row)]
+            out = [x + y for x, y in zip(out, list(map(int, row)))]
         out = dict(zip(data.wc_headers[1:-2], out))
         print(out)
         out['country'] = data.wc_countries.get(group)
