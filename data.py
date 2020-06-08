@@ -1,6 +1,5 @@
 # ISO3166 python dict 
 # oficial list in http://www.iso.org/iso/iso_3166_code_lists
-
 countries = {
 	'AF': 'AFGHANISTAN',
 	'AX': 'ÅLAND ISLANDS',
