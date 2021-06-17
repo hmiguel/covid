@@ -1,3 +1,3 @@
 # covid
 
-https://covid.veer.pt/stats/pt/summary
+https://covid.rijo.pt/stats/pt/summary
